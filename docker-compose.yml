@@ -1,0 +1,48 @@
+services:
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: agent
+      POSTGRES_PASSWORD: agent
+      POSTGRES_DB: agent
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    # No host port mapping — server container reaches Postgres via internal DNS (db:5432).
+    # To inspect with a local client: docker exec -it agent-tutorial-db-1 psql -U agent
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agent"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  server:
+    build: ./server
+    ports:
+      - "8003:8003"   # FastAPI / WebSocket — React app connects here
+      - "8002:8002"   # MCP server — exposed for Inspector / debugging
+    environment:
+      DATABASE_URL: postgresql://agent:agent@db:5432/agent
+    env_file:
+      - ./server/.env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # lets container reach Ollama on the host
+    depends_on:
+      db:
+        condition: service_healthy
+
+  ui:
+    build: ./ui
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./ui:/app                  # mount source for hot reloading
+      - /app/node_modules          # keep container's node_modules, don't overwrite with host
+    environment:
+      - VITE_API_URL=http://localhost:8003
+      - VITE_WS_URL=ws://localhost:8003/ws
+    depends_on:
+      - server
+
+volumes:
+  pgdata:

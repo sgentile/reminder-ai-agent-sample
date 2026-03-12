@@ -1,0 +1,18 @@
+# secrets
+.env
+server/.env
+ui/.env
+
+# user data (reminders, settings, users)
+server/data/
+
+# python
+__pycache__/
+*.pyc
+
+# node
+ui/node_modules/
+ui/dist/
+
+# stray root-level json from old single-container setup
+*.json
