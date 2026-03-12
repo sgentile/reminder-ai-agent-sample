@@ -183,8 +183,70 @@ const doc = new Document({
       }),
       new Paragraph({
         alignment: AlignmentType.CENTER,
-        children: [new TextRun({ text: "March 11, 2026", font: "Arial", size: 22, color: "AAAAAA" })],
+        children: [new TextRun({ text: "March 12, 2026", font: "Arial", size: 22, color: "AAAAAA" })],
       }),
+
+      pb(),
+
+      // ── 0. Ollama Setup ───────────────────────────────────────────────────
+      h1("0. Ollama Setup"),
+      p("The agent uses a locally-running LLM served by Ollama. The Docker containers talk to Ollama on your host machine — Ollama itself does NOT run inside Docker."),
+      spacer(),
+
+      h2("1. Install Ollama"),
+      twoColTable([
+        ["Platform", "Command / Instructions", true],
+        ["macOS (Homebrew)", "brew install ollama"],
+        ["macOS (App)", "Download from ollama.com/download and run the installer."],
+        ["Linux", "curl -fsSL https://ollama.com/install.sh | sh"],
+        ["Windows", "Download the installer from ollama.com/download."],
+      ]),
+      spacer(),
+
+      h2("2. Start the Ollama Service"),
+      p("Run the following command in a terminal and leave it running:"),
+      spacer(),
+      code("ollama serve"),
+      spacer(),
+      p("On macOS, if you installed the desktop app, Ollama starts automatically on login — you can skip this step. Confirm it is running:"),
+      spacer(),
+      code("curl http://localhost:11434/api/tags"),
+      spacer(),
+      p("You should receive a JSON response listing available models."),
+      spacer(),
+
+      h2("3. Pull a Model"),
+      p("The default model is gpt-oss:20b. Pull whichever model you want to use:"),
+      spacer(),
+      code("# Default (what this project ships with)"),
+      code("ollama pull gpt-oss:20b"),
+      spacer(),
+      code("# Faster alternative — good enough for this domain"),
+      code("ollama pull llama3.1:8b"),
+      spacer(),
+      code("# Larger, higher quality"),
+      code("ollama pull llama3.3:70b"),
+      spacer(),
+      p("Choosing a model: any model with solid tool-calling support works. llama3.1:8b is the fastest option for this use case (simple tools, short conversations). Larger models handle more complex or ambiguous inputs better but are slower."),
+      spacer(),
+
+      h2("4. Change the Model (Optional)"),
+      p("Edit server/Dockerfile and update the OLLAMA_MODEL line:"),
+      spacer(),
+      code("ENV OLLAMA_MODEL=llama3.1:8b"),
+      spacer(),
+      p("Then rebuild: make down && make up"),
+      spacer(),
+
+      h2("How the Container Reaches Ollama"),
+      p("The server container connects to Ollama on your host machine via host.docker.internal:11434. This is configured automatically:"),
+      spacer(),
+      twoColTable([
+        ["Platform", "How it works", true],
+        ["Docker Desktop (Mac / Windows)", "host.docker.internal resolves automatically — no extra configuration needed."],
+        ["Linux", "docker-compose.yml includes extra_hosts: host.docker.internal:host-gateway which sets this up automatically."],
+      ]),
+      spacer(),
 
       pb(),
 
